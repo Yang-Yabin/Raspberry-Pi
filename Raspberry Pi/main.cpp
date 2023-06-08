@@ -11,10 +11,10 @@
 int lastxpos=0;//
 int lastypos=0;
 
-int send_x=0;
+int send_x=0;//server需要返回给PC的坐标
 int send_y=0;
 int last_x=-1;
-int last_y=-1;
+int last_y=-1;//上一次返回的坐标
 
 //互斥锁及初始化
 pthread_mutex_t myMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -52,6 +52,10 @@ int main(){
     pthread_t ServerSocket;
     pthread_create(&ServerSocket, NULL,sendThread,NULL);
 
+    int index;//自动巡检时计数
+
+    int xpause=0;//记录暂停时的坐标
+    int ypause=0;
 
     int xpos = 0;//
     int ypos = 0;
@@ -79,7 +83,7 @@ int main(){
 
             //自动巡检==========================================================================
             if(buffer[1]=="auto"){
-                int index = 0;
+                index = 0;
                 while (index < 35) {
                     int i = index % 7;
                     int j = index / 7;
@@ -90,12 +94,12 @@ int main(){
                         i=6-i;
                         rela_position(lastxpos, lastypos, i, j);
                     }
-                    s_delay(del);
+                    
                     lastxpos = i;
                     lastypos = j;
                     index++;
-
                     sigSend();
+                    s_delay(del);
 
                     pthread_mutex_lock(&myMutex);
                     buffer=recvMsg;
@@ -110,10 +114,12 @@ int main(){
                             j++;
                             rela_position(lastxpos, lastypos, i, j);
                         }
-                        s_delay(del);
+                        
                         lastxpos = i;
                         lastypos = j;
                         index++;
+                        sigSend();
+                        s_delay(del);
 
                         pthread_mutex_lock(&myMutex);
                         buffer=recvMsg;
@@ -177,14 +183,80 @@ int main(){
                 moveone(lastxpos,lastypos,buffer[2]);
                 std::cout<<"move finish."<<std::endl;
             }
-
+            //暂停
             else if (buffer[1]=="pause"){
                 std::cout<<"pause"<<std::endl;
+                xpause=lastxpos;
+                ypause=lastypos;
             }
+            //继续自动巡检
+            else if (buffer[1]=="continue"){
+                std::cout<<"continue automatic inspection."<<std::endl;
+                rela_position(lastxpos,lastypos,xpause,ypause);
+                while (index < 35) {
+                    int i = index % 7;
+                    int j = index / 7;
+                    if (j % 2 == 0) {  // 从左向右
+                        rela_position(lastxpos, lastypos, i, j);
+                    }
+                    else { // 从右向左
+                        i=6-i;
+                        rela_position(lastxpos, lastypos, i, j);
+                    }
+                    s_delay(del);
+                    lastxpos = i;
+                    lastypos = j;
+                    index++;
+
+                    sigSend();//发送信号
+
+                    pthread_mutex_lock(&myMutex);
+                    buffer=recvMsg;
+                    pthread_mutex_unlock(&myMutex);
+                    if(buffer!=buffer1) {
+                        break;
+                    }
+
+                    if (i==6&&j!=4) {  // 每一行巡检结束进入下一行
+                        if (j% 2 == 0) {
+                            i=6;
+                            j++;
+                            rela_position(lastxpos, lastypos, i, j);
+                        }
+                        
+                        lastxpos = i;
+                        lastypos = j;
+                        index++;
+                        sigSend();
+                        s_delay(del);
+
+                        pthread_mutex_lock(&myMutex);
+                        buffer=recvMsg;
+                        pthread_mutex_unlock(&myMutex);
+                        if(buffer!=buffer1) {
+                            break;
+                        }
+                    }
+
+                    while(index==35){
+                        int index = 0;
+                        int i = index%7;
+                        int j = index/7;
+                        together_rotate(lastxpos,lastypos,i,j);
+                        lastxpos = i;
+                        lastypos = j;
+                        sigSend();
+                        std::cout<<"Automatic inspection continue completed."<<std::endl;
+                        break;
+                    }
+                }
+            }
+            //结束程序
             else if (buffer[1]=="finish"){
                 std::cout<<"finish"<<std::endl;
                 return 0;
             }
+            //输入错误
             else{
                 std::cout<<"input wrong!!!"<<std::endl;
             }
