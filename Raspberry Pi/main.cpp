@@ -181,6 +181,8 @@ int main(){
             //上、下、左、右============================================================================
             else if (buffer[1]=="move"){
                 moveone(lastxpos,lastypos,buffer[2]);
+                std::cout << lastxpos << lastypos << std::endl;
+                sigSend();
                 std::cout<<"move finish."<<std::endl;
             }
             //暂停
@@ -192,7 +194,25 @@ int main(){
             //继续自动巡检
             else if (buffer[1]=="continue"){
                 std::cout<<"continue automatic inspection."<<std::endl;
-                rela_position(lastxpos,lastypos,xpause,ypause);
+                //rela_position(lastxpos,lastypos,xpause,ypause);
+                if(index==35){
+                    break;
+                }
+                int i = index % 7;
+                int j = index / 7;
+                if (j % 2 == 0) {  
+                    rela_position(lastxpos, lastypos, i, j);
+                }
+                else { 
+                    i=6-i;
+                    rela_position(lastxpos, lastypos, i, j);
+                }
+                lastxpos = i;
+                lastypos = j;
+                index++;
+                sigSend();
+                s_delay(1);
+
                 while (index < 35) {
                     int i = index % 7;
                     int j = index / 7;
@@ -203,12 +223,12 @@ int main(){
                         i=6-i;
                         rela_position(lastxpos, lastypos, i, j);
                     }
-                    s_delay(del);
+                    
                     lastxpos = i;
                     lastypos = j;
                     index++;
-
                     sigSend();//发送信号
+                    s_delay(del);
 
                     pthread_mutex_lock(&myMutex);
                     buffer=recvMsg;
