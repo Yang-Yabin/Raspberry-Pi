@@ -7,19 +7,19 @@
 #include "ServerSocket.h"
 #include "control.h"
 
-#define del 5  //
-int lastxpos=0;//
+#define del 5  
+int lastxpos=0;
 int lastypos=0;
 
-int send_x=0;//server需要返回给PC的坐标
+int send_x=0;                   //server需要返回给PC的坐标
 int send_y=0;
 int last_x=-1;
-int last_y=-1;//上一次返回的坐标
+int last_y=-1;                  //上一次返回的坐标
 
 //互斥锁及初始化
 pthread_mutex_t myMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t sendMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t myCond = PTHREAD_COND_INITIALIZER;   //条件变量
+pthread_cond_t myCond = PTHREAD_COND_INITIALIZER;                       //条件变量
 
 //vector<string>输出
 void vecPrint(std::vector<std::string> vec){
@@ -52,22 +52,21 @@ int main(){
     pthread_t ServerSocket;
     pthread_create(&ServerSocket, NULL,sendThread,NULL);
 
-    int index;//自动巡检时计数
+    int index;                      //自动巡检时计数
 
-    int xpause=0;//记录暂停时的坐标
+    int xpause=0;                   //记录暂停时的坐标
     int ypause=0;
 
     int xpos = 0;//
     int ypos = 0;
-    //================================================================
+    
     int res;
-    std::vector<std::string> buffer(3,"0");//存放PC端命令的容器
+    std::vector<std::string> buffer(3,"0");             //存放PC端命令的容器
     std::vector<std::string> buffer1(3,"0");
 
-    init_moto();//初始化树莓派硬件
+    init_moto();                                        //初始化树莓派硬件
 
     while(1){
-        //std::cout<<"wait message"<<std::endl;
         int res=pthread_mutex_lock(&myMutex);
         if(res!=0){
             std::cout<<"lock error"<<std::endl;
@@ -81,7 +80,7 @@ int main(){
             buffer1=buffer;
             vecPrint(buffer);
 
-            //自动巡检==========================================================================
+            //自动巡检
             if(buffer[1]=="auto"){
                 index = 0;
                 while (index < 35) {
@@ -108,7 +107,7 @@ int main(){
                         break;
                     }
 
-                    if (i==6&&j!=4) {  // 每一行巡检结束进入下一行
+                    if (i==6&&j!=4) {  //每一行巡检结束进入下一行
                         if (j% 2 == 0) {
                             i=6;
                             j++;
@@ -143,7 +142,7 @@ int main(){
                 }
             }
 
-            //指定位置巡检========================================================================
+            //指定位置巡检
             else if (buffer[1]=="book"){
                 getpos(buffer[2] ,xpos,ypos);
                 std::cout<<"target:"<<xpos<<" "<<ypos<<std::endl;
@@ -178,7 +177,7 @@ int main(){
                 }
             }
 
-            //上、下、左、右============================================================================
+            //上、下、左、右
             else if (buffer[1]=="move"){
                 moveone(lastxpos,lastypos,buffer[2]);
                 std::cout << lastxpos << lastypos << std::endl;
