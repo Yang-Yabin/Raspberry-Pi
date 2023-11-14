@@ -16,4 +16,4 @@ extern void together_rotate(int x0,int y0,int x1,int y1);
 extern void getpos(std::string str, int &x,int &y);
 extern void moveone(int &lastxpos,int &lastypos,std::string str);
 
-#endif // 
+#endif 
