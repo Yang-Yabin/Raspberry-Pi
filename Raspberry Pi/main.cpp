@@ -19,7 +19,7 @@ int last_y=-1;                  //上一次返回的坐标
 //互斥锁及初始化
 pthread_mutex_t myMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t sendMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t myCond = PTHREAD_COND_INITIALIZER;                       //条件变量
+pthread_cond_t myCond = PTHREAD_COND_INITIALIZER;           //条件变量
 
 //vector<string>输出
 void vecPrint(std::vector<std::string> vec){
